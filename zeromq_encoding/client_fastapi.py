@@ -1,6 +1,6 @@
 """
 uvicorn client_fastapi:app --workers 1 --port 8111
-ab -c 1 -n 100 http://127.0.0.1:8111/embed?query=test
+ab -c 1 -n 100 http://127.0.0.1:8111/embed?query=testing+the+multilingual+on+AWS
 """
 import zmq
 import uuid

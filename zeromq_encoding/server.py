@@ -3,10 +3,12 @@ import zmq
 import random
 import json
 from sentence_transformers import SentenceTransformer
+import sys
 
-model = SentenceTransformer("paraphrase-MiniLM-L3-v2")
+model = SentenceTransformer(sys.argv[1]).half().cuda()
+model.encode("test")
 
-batching_window = 10 #ms
+batching_window = 1 #ms
 
 context_receiver = zmq.Context()
 receiver = context_receiver.socket(zmq.PULL)
@@ -39,7 +41,7 @@ while True:
         texts.append(msg.decode('utf-8'))
       
     #Compute embeddings
-    embeddings = model.encode(texts, convert_to_tensor=True)
+    embeddings = model.encode(texts, convert_to_tensor=True, batch_size=256).cpu()
 
     # Send back the embeddings
     for idx in range(len(embeddings)):
