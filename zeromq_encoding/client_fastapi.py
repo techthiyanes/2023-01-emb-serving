@@ -1,6 +1,7 @@
 """
-uvicorn client_fastapi:app --workers 1 --port 8111
+uvicorn client_fastapi:app --port 8111 --workers 1 
 ab -c 1 -n 100 http://127.0.0.1:8111/embed?query=testing+the+multilingual+on+AWS
+ab -c 100 -n 10000 http://127.0.0.1:8112/embed?query=testing+the+multilingual+on+AWS
 """
 import zmq
 import uuid
@@ -15,7 +16,11 @@ def recv_array(socket, flags=0, copy=True, track=False):
     msg = socket.recv(flags=flags, copy=copy, track=track)
     buf = msg #buffer(msg)
     A = numpy.frombuffer(buf, dtype=md['dtype'])
-    return A.reshape(md['shape'])
+    return A.reshape(md['shape']).tolist()
+
+def recv_multipart(socket):
+    _, emb = socket.recv_multipart()
+    return emb.decode()
 
 identity = str(uuid.uuid4()).encode('ascii')
 
@@ -40,12 +45,11 @@ app = FastAPI()
 
 @app.get("/embed")
 async def embed(query):
-    print("send", query, "identity:", identity)
+    #print("send", query, "identity:", identity)
     sender.send_multipart([identity, query.encode()])
 
-    emb = recv_array(receiver)
-    #print("Emb:", emb.shape)
-    return emb.tolist()
+    emb = recv_multipart(receiver)
+    return emb
     
 
 

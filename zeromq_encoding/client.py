@@ -13,6 +13,10 @@ def recv_array(socket, flags=0, copy=True, track=False):
     A = numpy.frombuffer(buf, dtype=md['dtype'])
     return A.reshape(md['shape'])
 
+def recv_multipart(socket):
+    _, emb = socket.recv_multipart()
+    return json.loads(emb.decode())
+
 identity = str(uuid.uuid4()).encode('ascii')
 
 #  Sender queue
@@ -34,9 +38,7 @@ for idx in range(100):
     print("send", text, "identity:", identity)
     sender.send_multipart([identity, text.encode()])
 
-    emb = recv_array(receiver)
-    #_, emb = receiver.recv_multipart()
-    #emb = json.loads(emb.decode())
+    emb = recv_multipart(receiver)
     print("Response:", emb[0:3])
 
 
