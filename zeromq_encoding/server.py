@@ -4,8 +4,23 @@ import random
 import json
 from sentence_transformers import SentenceTransformer
 import sys
+import torch
 
-model = SentenceTransformer(sys.argv[1]).half().cuda()
+def send_array(socket, sender_id, A, flags=0, copy=True, track=False):
+    """send a numpy array with metadata"""
+    md = dict(
+        dtype = str(A.dtype),
+        shape = A.shape,
+    )
+    socket.send(sender_id, flags|zmq.SNDMORE)
+    socket.send_json(md, flags|zmq.SNDMORE)
+    return socket.send(A, flags, copy=copy, track=track)
+
+model = SentenceTransformer(sys.argv[1])
+
+if torch.cuda.is_available():
+    model = model.half()
+
 model.encode("test")
 
 batching_window = 1 #ms
@@ -48,7 +63,8 @@ while True:
         sender_id = sender_ids[idx]
         emb = embeddings[idx]
         #print("Respond", [sender_id, emb[0:3]])
-        sender.send_multipart([sender_id, json.dumps(emb.tolist()).encode()])
+        #sender.send_multipart([sender_id, json.dumps(emb.tolist()).encode()])
+        send_array(sender, sender_id, emb.numpy())
 
 
  

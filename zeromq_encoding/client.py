@@ -2,7 +2,16 @@ import zmq
 import uuid
 import time
 import json
+import numpy 
 
+def recv_array(socket, flags=0, copy=True, track=False):
+    """recv a numpy array"""
+    sender_id = socket.recv(flags=flags)
+    md = socket.recv_json(flags=flags)
+    msg = socket.recv(flags=flags, copy=copy, track=track)
+    buf = msg #buffer(msg)
+    A = numpy.frombuffer(buf, dtype=md['dtype'])
+    return A.reshape(md['shape'])
 
 identity = str(uuid.uuid4()).encode('ascii')
 
@@ -25,8 +34,9 @@ for idx in range(100):
     print("send", text, "identity:", identity)
     sender.send_multipart([identity, text.encode()])
 
-    _, emb = receiver.recv_multipart()
-    emb = json.loads(emb.decode())
+    emb = recv_array(receiver)
+    #_, emb = receiver.recv_multipart()
+    #emb = json.loads(emb.decode())
     print("Response:", emb[0:3])
 
 

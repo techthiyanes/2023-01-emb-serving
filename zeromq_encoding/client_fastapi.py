@@ -6,7 +6,16 @@ import zmq
 import uuid
 from fastapi import FastAPI
 import json
+import numpy
 
+def recv_array(socket, flags=0, copy=True, track=False):
+    """recv a numpy array"""
+    sender_id = socket.recv(flags=flags)
+    md = socket.recv_json(flags=flags)
+    msg = socket.recv(flags=flags, copy=copy, track=track)
+    buf = msg #buffer(msg)
+    A = numpy.frombuffer(buf, dtype=md['dtype'])
+    return A.reshape(md['shape'])
 
 identity = str(uuid.uuid4()).encode('ascii')
 
@@ -34,10 +43,9 @@ async def embed(query):
     print("send", query, "identity:", identity)
     sender.send_multipart([identity, query.encode()])
 
-    _, emb = receiver.recv_multipart()
-    #emb = json.loads(emb.decode())
-    #print("Response:", emb[0:3])
-    return emb
+    emb = recv_array(receiver)
+    #print("Emb:", emb.shape)
+    return emb.tolist()
     
 
 
