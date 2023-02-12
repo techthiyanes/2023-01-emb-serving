@@ -170,11 +170,11 @@ def main(call_args):
     model_metadata = triton_client.get_model_metadata(model_name=model_name, model_version=model_version)
     model_config = triton_client.get_model_config(model_name=model_name, model_version=model_version)
 
-    query = tritonclient.http.InferInput(name="TEXT", shape=(batch_size,), datatype="BYTES")
+    query = tritonclient.http.InferInput(name="TEXT", shape=(batch_size, 1), datatype="BYTES")
     model_score = tritonclient.http.InferRequestedOutput(name="output", binary_data=False)
     time_buffer = list()
     for _ in range(10):
-        query.set_data_from_numpy(np.asarray([text] * batch_size, dtype=object))
+        query.set_data_from_numpy(np.asarray([[text]] * batch_size, dtype=object))
         _ = triton_client.infer(
             model_name=model_name, model_version=model_version, inputs=[query], outputs=[model_score]
         )
@@ -184,7 +184,7 @@ def main(call_args):
     start_time = time.time()
     for _ in range(num_queries):
         with track_infer_time(time_buffer):
-            query.set_data_from_numpy(np.asarray([text] * batch_size, dtype=object))
+            query.set_data_from_numpy(np.asarray([[text]] * batch_size, dtype=object))
             response = triton_client.infer(
                 model_name=model_name, model_version=model_version, inputs=[query], outputs=[model_score]
             )

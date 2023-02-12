@@ -1,19 +1,6 @@
-#  Copyright 2022, Lefebvre Dalloz Services
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
 
 import argparse
-
+import time
 import numpy as np
 import tritonclient.http
 import tqdm
@@ -22,11 +9,12 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 
 text = sys.argv[1]
+batch_size = int(sys.argv[2])
 
 model_name = f"sbert"
 url = "127.0.0.1:8000"
 model_version = "1"
-batch_size = 3
+
 
 triton_client = tritonclient.http.InferenceServerClient(url=url, verbose=False)
 assert triton_client.is_model_ready(
@@ -36,18 +24,26 @@ assert triton_client.is_model_ready(
 model_metadata = triton_client.get_model_metadata(model_name=model_name, model_version=model_version)
 model_config = triton_client.get_model_config(model_name=model_name, model_version=model_version)
 
-query = tritonclient.http.InferInput(name="TEXT", shape=(batch_size,), datatype="BYTES")
+query = tritonclient.http.InferInput(name="TEXT", shape=(batch_size, 1), datatype="BYTES")
 model_score = tritonclient.http.InferRequestedOutput(name="output", binary_data=False)
 
-query.set_data_from_numpy(np.asarray([text] * batch_size, dtype=object))
+#in_data = np.asarray([text] * batch_size, dtype=object)
+in_data = np.asarray([[text]] * batch_size, dtype=object)
+print(in_data)
+query.set_data_from_numpy(in_data)
+
+start_time = time.time()
 response = triton_client.infer(
     model_name=model_name, model_version=model_version, inputs=[query], outputs=[model_score]
 )
+end_time = time.time()
+print(f"Call took {(end_time-start_time)*1000} ms")
 
 emb = response.as_numpy("output")[0]
 print(emb.shape, emb[0:3])
 
 #Check embedding
+exit()
 print("Check embedding")
 model = SentenceTransformer("sentence-transformers/LaBSE", device="cpu")
 emb_check = model.encode(text, convert_to_numpy=True)
