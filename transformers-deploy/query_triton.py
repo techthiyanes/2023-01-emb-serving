@@ -23,10 +23,10 @@ import numpy as np
 
 text = sys.argv[1]
 
-model_name = f"transformer_onnx_inference"
+model_name = f"sbert"
 url = "127.0.0.1:8000"
 model_version = "1"
-batch_size = 1
+batch_size = 3
 
 triton_client = tritonclient.http.InferenceServerClient(url=url, verbose=False)
 assert triton_client.is_model_ready(
@@ -48,7 +48,8 @@ emb = response.as_numpy("output")[0]
 print(emb.shape, emb[0:3])
 
 #Check embedding
-model = SentenceTransformer("sentence-transformers/multi-qa-mpnet-base-cos-v1", device="cpu")
+print("Check embedding")
+model = SentenceTransformer("sentence-transformers/LaBSE", device="cpu")
 emb_check = model.encode(text, convert_to_numpy=True)
 diff = np.max(np.abs(emb - emb_check))
 print("Diff:", diff)

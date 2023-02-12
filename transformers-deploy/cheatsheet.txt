@@ -4,7 +4,7 @@ docker run -it --rm --gpus all \
     convert_model -m \"sentence-transformers/LaBSE\" \
     --backend onnx \
     --task embedding \
-    --seq-len 16 128 128"
+    --seq-len 16 256 256"
 
 
 docker run -it --rm --gpus all \
@@ -16,6 +16,11 @@ docker run -it --rm --gpus all \
     --seq-len 16 128 128"
 
 
+docker build -t nils_triton nils_docker/
+
+ docker run -it --rm --gpus all -p8000:8000 -p8001:8001 -p8002:8002 --shm-size 256m   -v $PWD/triton_models:/models nils_triton   bash -c "tritonserver --model-repository=/models"
+
+=> Change in transformer_onnx_model/config.pbtxt output dims: [-1, 768]
 
 
 docker run -it --rm --gpus all -p8000:8000 -p8001:8001 -p8002:8002 --shm-size 256m \
