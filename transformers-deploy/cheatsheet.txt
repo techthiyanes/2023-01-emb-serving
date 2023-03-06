@@ -18,7 +18,7 @@ docker run -it --rm --gpus all \
 
 docker build -t nils_triton nils_docker/
 
- docker run -it --rm --gpus all -p8000:8000 -p8001:8001 -p8002:8002 --shm-size 256m   -v $PWD/triton_models:/models nils_triton   bash -c "tritonserver --model-repository=/models"
+docker run -it --rm --gpus all -p8000:8000 -p8001:8001 -p8002:8002 --shm-size 256m   -v $PWD/triton_models_nils:/models nils_triton   bash -c "tritonserver --model-repository=/models"
 
 => Change in transformer_onnx_model/config.pbtxt output dims: [-1, 768]
 
