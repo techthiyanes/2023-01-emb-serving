@@ -27,6 +27,7 @@ from typing import Dict, List, Union
 
 import numpy as np
 import torch
+import time
 
 
 def print_timings(name: str, timings: List[float]) -> None:
@@ -173,6 +174,8 @@ def main(call_args):
     query = tritonclient.http.InferInput(name="TEXT", shape=(batch_size, 1), datatype="BYTES")
     model_score = tritonclient.http.InferRequestedOutput(name="output", binary_data=False)
     time_buffer = list()
+
+    #Warm up
     for _ in range(10):
         query.set_data_from_numpy(np.asarray([[text]] * batch_size, dtype=object))
         _ = triton_client.infer(

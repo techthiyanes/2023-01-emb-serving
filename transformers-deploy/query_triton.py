@@ -11,7 +11,7 @@ import numpy as np
 text = sys.argv[1]
 batch_size = int(sys.argv[2])
 
-model_name = f"sbert2onnx"
+model_name = f"python_onnx"
 url = "127.0.0.1:8000"
 model_version = "1"
 
